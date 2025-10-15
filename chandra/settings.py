@@ -9,10 +9,18 @@ class Settings(BaseSettings):
     # Paths
     BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     IMAGE_DPI: int = 96
-    MODEL_CHECKPOINT: str = "datalab-to/chandra-0.2.1"
+    MODEL_CHECKPOINT: str = "datalab-to/chandra-0.2.8"
     TORCH_DEVICE: str | None = None
-    MAX_OUTPUT_TOKENS: int = 2048
+    MAX_OUTPUT_TOKENS: int = 8192
 
+    # vLLM server settings
+    USE_VLLM: bool = False
+    VLLM_API_KEY: str = "EMPTY"
+    VLLM_API_BASE: str = "http://localhost:8000/v1"
+    VLLM_MODEL_NAME: str = "chandra"
+    VLLM_GPUS: str = "0"
+
+    # Transformers settings
     @computed_field
     @property
     def TORCH_DEVICE_MODEL(self) -> str:

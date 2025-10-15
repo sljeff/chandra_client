@@ -1,0 +1,18 @@
+from dataclasses import dataclass
+from typing import List
+
+from PIL import Image
+
+
+@dataclass
+class BatchInputItem:
+    image: Image.Image
+    prompt: str | None = None
+    prompt_type: str | None = None
+
+@dataclass
+class BatchOutputItem:
+    markdown: str
+    html: str
+    chunks: dict
+    raw: str
