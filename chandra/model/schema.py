@@ -16,3 +16,4 @@ class BatchOutputItem:
     html: str
     chunks: dict
     raw: str
+    page_box: List[int]

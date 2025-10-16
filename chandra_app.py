@@ -38,7 +38,7 @@ def ocr_layout(
     result = model.generate([batch])[0]
     layout = parse_layout(result.raw, img)
     layout_image = draw_layout(img, layout)
-    return result.html, layout_image, result.markdown
+    return result, layout_image
 
 
 st.set_page_config(layout="wide")
@@ -94,7 +94,7 @@ if run_ocr:
     if model_mode == "None":
         st.error("Please select a model mode (hf or vllm) to run OCR.")
     else:
-        pred, layout_image, markdown = ocr_layout(
+        result, layout_image = ocr_layout(
             pil_image,
             model,
         )
@@ -102,19 +102,20 @@ if run_ocr:
         with col1:
             html_tab, text_tab, layout_tab = st.tabs(["HTML", "HTML as text", "Layout Image"])
             with html_tab:
-                st.markdown(markdown, unsafe_allow_html=True)
+                st.markdown(result.markdown, unsafe_allow_html=True)
                 st.download_button(
                     label="Download Markdown",
-                    data=markdown,
+                    data=result.markdown,
                     file_name=f"{in_file.name.rsplit('.', 1)[0]}_page{page_number if page_number is not None else 0}.md",
                     mime="text/markdown",
                 )
             with text_tab:
-                st.text(pred)
+                st.text(result.html)
 
             if layout_image:
                 with layout_tab:
                     st.image(layout_image, caption="Detected Layout", use_container_width=True)
+                    st.text_area(result.raw)
 
 with col2:
     st.image(pil_image, caption="Uploaded Image", use_container_width=True)

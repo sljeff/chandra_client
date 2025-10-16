@@ -159,7 +159,11 @@ def parse_layout(html: str, image: Image.Image):
     layout_blocks = []
     for div in top_level_divs:
         bbox = div.get("data-bbox")
-        bbox = json.loads(bbox)
+        try:
+            bbox = json.loads(bbox)
+        except Exception as e:
+            bbox = [0, 0, 1, 1] # Fallback to a default bbox if parsing fails
+
         bbox = list(map(int, bbox))
         # Normalize bbox
         bbox = [

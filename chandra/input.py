@@ -8,7 +8,16 @@ from chandra.settings import settings
 
 def load_pdf_images(filepath: str, page_range: List[int]):
     doc = pdfium.PdfDocument(filepath)
-    images = [doc[i].render(scale=settings.IMAGE_DPI / 72).to_pil().convert("RGB") for i in range(len(doc)) if not page_range or i in page_range]
+    images = []
+    for page in range(len(doc)):
+        if not page_range or page in page_range:
+            page_obj = doc[page]
+            min_page_dim = min(page_obj.get_width(), page_obj.get_height())
+            scale_dpi = (settings.MIN_IMAGE_DIM / min_page_dim) * 72
+            scale_dpi = max(scale_dpi, settings.IMAGE_DPI)
+            pil_image = doc[page].render(scale=scale_dpi / 72).to_pil().convert("RGB")
+            images.append(pil_image)
+
     doc.close()
     return images
 

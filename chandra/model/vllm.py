@@ -1,6 +1,7 @@
 import base64
 import io
 from concurrent.futures import ThreadPoolExecutor
+from itertools import repeat
 from typing import List
 
 from PIL import Image
@@ -19,12 +20,18 @@ def image_to_base64(image: Image.Image) -> str:
     return base64.b64encode(buffered.getvalue()).decode()
 
 
-def generate_vllm(batch: List[BatchInputItem], max_retries: int = 5):
+def generate_vllm(batch: List[BatchInputItem], max_retries: int = None, max_workers: int | None = None):
     client = OpenAI(
         api_key=settings.VLLM_API_KEY,
         base_url=settings.VLLM_API_BASE,
     )
     model_name = settings.VLLM_MODEL_NAME
+
+    if max_retries is None:
+        max_retries = settings.MAX_VLLM_RETRIES
+
+    if max_workers is None:
+        max_workers = min(64, len(batch))
 
     if model_name is None:
         models = client.models.list()
@@ -62,19 +69,19 @@ def generate_vllm(batch: List[BatchInputItem], max_retries: int = 5):
         )
         return completion.choices[0].message.content
 
-    def process_item(item, max_retries=3):
+    def process_item(item, max_retries):
         result = _generate(item)
         retries = 0
 
         while retries < max_retries and (detect_repeat_token(result) or
-                                         (len(result) > 50 and detect_repeat_token(result[:-50]))):
+                                         (len(result) > 50 and detect_repeat_token(result, cut_from_end=50))):
             print(f"Detected repeat token, retrying generation (attempt {retries + 1})...")
-            result = _generate(item, temperature=0.2, top_p=0.9)
+            result = _generate(item, temperature=0.3, top_p=0.95)
             retries += 1
 
         return result
 
-    with ThreadPoolExecutor(max_workers=len(batch)) as executor:
-        results = list(executor.map(process_item, batch))
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        results = list(executor.map(process_item, batch, repeat(max_retries)))
 
     return results

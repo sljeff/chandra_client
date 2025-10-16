@@ -3,6 +3,8 @@ from typing import Tuple
 
 from PIL import Image
 
+from chandra.output import parse_markdown
+
 
 def scale_to_fit(
     img: Image.Image,
@@ -41,29 +43,30 @@ def scale_to_fit(
 
 
 def detect_repeat_token(
-    predicted_tokens: str, max_repeats: int = 4, window_size: int = 50
+    predicted_tokens: str, max_repeats: int = 4, window_size: int = 500, cut_from_end: int = 0
 ):
-    if len(predicted_tokens) < window_size:
-        return False
+    try:
+        predicted_tokens = parse_markdown(predicted_tokens)
+    except Exception as e:
+        print(f"Error parsing markdown: {e}")
+        return True
 
-    # Look at the last window_size tokens
-    recent_tokens = predicted_tokens[-window_size:].lower()
+    if cut_from_end > 0:
+        predicted_tokens = predicted_tokens[:-cut_from_end]
 
     # Try different sequence lengths (1 to window_size//2)
     for seq_len in range(1, window_size // 2 + 1):
-        # Skip if we can't fit enough repetitions
-        if seq_len * (max_repeats + 1) > window_size:
-            continue
-
         # Extract the potential repeating sequence from the end
-        candidate_seq = recent_tokens[-seq_len:]
+        candidate_seq = predicted_tokens[-seq_len:]
 
         # Count how many times this sequence appears consecutively at the end
         repeat_count = 0
-        pos = len(recent_tokens) - seq_len
+        pos = len(predicted_tokens) - seq_len
+        if pos < 0:
+            continue
 
         while pos >= 0:
-            if recent_tokens[pos : pos + seq_len] == candidate_seq:
+            if predicted_tokens[pos : pos + seq_len] == candidate_seq:
                 repeat_count += 1
                 pos -= seq_len
             else:
@@ -74,3 +77,7 @@ def detect_repeat_token(
             return True
 
     return False
+
+
+def layout_failed(predicted_tokens: str, image: Image.Image):
+    pass

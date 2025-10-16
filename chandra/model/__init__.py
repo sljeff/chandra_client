@@ -30,6 +30,7 @@ class InferenceManager:
                     html=parse_html(result),
                     chunks=parse_chunks(result, input_item.image),
                     raw=result,
+                    page_box=[0, 0, input_item.image.width, input_item.image.height]
                 )
             )
         return output
