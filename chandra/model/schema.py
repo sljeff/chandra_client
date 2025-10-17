@@ -3,6 +3,10 @@ from typing import List
 
 from PIL import Image
 
+@dataclass
+class GenerationResult:
+    raw: str
+    token_count: int
 
 @dataclass
 class BatchInputItem:
@@ -17,3 +21,4 @@ class BatchOutputItem:
     chunks: dict
     raw: str
     page_box: List[int]
+    token_count: int

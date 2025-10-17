@@ -3,13 +3,13 @@ from typing import List
 from qwen_vl_utils import process_vision_info
 from transformers import Qwen2_5_VLForConditionalGeneration, Qwen2_5_VLProcessor
 
-from chandra.model.schema import BatchInputItem
+from chandra.model.schema import BatchInputItem, GenerationResult
 from chandra.model.util import scale_to_fit
 from chandra.prompts import PROMPT_MAPPING
 from chandra.settings import settings
 
 
-def generate_hf(batch: List[BatchInputItem], model, **kwargs):
+def generate_hf(batch: List[BatchInputItem], model, **kwargs) -> List[GenerationResult]:
     messages = [process_batch_element(item, model.processor) for item in batch]
     text = model.processor.apply_chat_template(
         messages, tokenize=False, add_generation_prompt=True
@@ -33,7 +33,11 @@ def generate_hf(batch: List[BatchInputItem], model, **kwargs):
     output_text = model.processor.batch_decode(
         generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
     )
-    return output_text
+    results = [
+        GenerationResult(raw=out, token_count=len(ids))
+        for out, ids in zip(output_text, generated_ids_trimmed)
+    ]
+    return results
 
 
 def process_batch_element(item: BatchInputItem, processor):

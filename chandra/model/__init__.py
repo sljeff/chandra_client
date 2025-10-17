@@ -26,11 +26,12 @@ class InferenceManager:
         for result, input_item in zip(results, batch):
             output.append(
                 BatchOutputItem(
-                    markdown=parse_markdown(result),
-                    html=parse_html(result),
-                    chunks=parse_chunks(result, input_item.image),
-                    raw=result,
-                    page_box=[0, 0, input_item.image.width, input_item.image.height]
+                    markdown=parse_markdown(result.raw),
+                    html=parse_html(result.raw),
+                    chunks=parse_chunks(result.raw, input_item.image),
+                    raw=result.raw,
+                    page_box=[0, 0, input_item.image.width, input_item.image.height],
+                    token_count=result.token_count
                 )
             )
         return output
