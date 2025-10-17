@@ -9,7 +9,12 @@ from chandra.prompts import PROMPT_MAPPING
 from chandra.settings import settings
 
 
-def generate_hf(batch: List[BatchInputItem], model, **kwargs) -> List[GenerationResult]:
+def generate_hf(
+    batch: List[BatchInputItem], model, max_output_tokens=None, **kwargs
+) -> List[GenerationResult]:
+    if max_output_tokens is None:
+        max_output_tokens = settings.MAX_OUTPUT_TOKENS
+
     messages = [process_batch_element(item, model.processor) for item in batch]
     text = model.processor.apply_chat_template(
         messages, tokenize=False, add_generation_prompt=True
@@ -21,17 +26,20 @@ def generate_hf(batch: List[BatchInputItem], model, **kwargs) -> List[Generation
         images=image_inputs,
         padding=True,
         return_tensors="pt",
-        padding_side="left"
+        padding_side="left",
     )
     inputs = inputs.to("cuda")
 
     # Inference: Generation of the output
-    generated_ids = model.generate_hf(**inputs, max_new_tokens=settings.MAX_OUTPUT_TOKENS)
+    generated_ids = model.generate_hf(**inputs, max_new_tokens=max_output_tokens)
     generated_ids_trimmed = [
-        out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+        out_ids[len(in_ids) :]
+        for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
     ]
     output_text = model.processor.batch_decode(
-        generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+        generated_ids_trimmed,
+        skip_special_tokens=True,
+        clean_up_tokenization_spaces=False,
     )
     results = [
         GenerationResult(raw=out, token_count=len(ids))
@@ -52,10 +60,7 @@ def process_batch_element(item: BatchInputItem, processor):
     content.append({"type": "image", "image": image})
 
     content.append({"type": "text", "text": prompt})
-    message = {
-        "role": "user",
-        "content": content
-    }
+    message = {"role": "user", "content": content}
     return message
 
 

@@ -24,3 +24,8 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 include = ["chandra*"]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.3.0",
+]

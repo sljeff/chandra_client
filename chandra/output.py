@@ -24,6 +24,7 @@ def parse_html(html: str, include_headers_footers: bool = False):
         out_html += content
     return out_html
 
+
 def escape_dollars(text):
     return text.replace("$", r"\$")
 
@@ -139,7 +140,11 @@ def parse_markdown(html: str, include_headers_footers: bool = False):
         inline_math_delimiters=("$", "$"),
         block_math_delimiters=("$$", "$$"),
     )
-    markdown = md_cls.convert(html)
+    try:
+        markdown = md_cls.convert(html)
+    except Exception as e:
+        print(f"Error converting HTML to Markdown: {e}")
+        markdown = ""
     return markdown.strip()
 
 
@@ -161,8 +166,8 @@ def parse_layout(html: str, image: Image.Image):
         bbox = div.get("data-bbox")
         try:
             bbox = json.loads(bbox)
-        except Exception as e:
-            bbox = [0, 0, 1, 1] # Fallback to a default bbox if parsing fails
+        except Exception:
+            bbox = [0, 0, 1, 1]  # Fallback to a default bbox if parsing fails
 
         bbox = list(map(int, bbox))
         # Normalize bbox
@@ -177,8 +182,8 @@ def parse_layout(html: str, image: Image.Image):
         layout_blocks.append(LayoutBlock(bbox=bbox, label=label, content=content))
     return layout_blocks
 
+
 def parse_chunks(html: str, image: Image.Image):
     layout = parse_layout(html, image)
     chunks = [asdict(block) for block in layout]
     return chunks
-

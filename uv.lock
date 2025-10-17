@@ -182,6 +182,11 @@ dependencies = [
     { name = "transformers" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "pre-commit" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.14.2" },
@@ -200,6 +205,9 @@ requires-dist = [
     { name = "torchvision", specifier = ">=0.23.0" },
     { name = "transformers", specifier = ">=4.57.1" },
 ]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pre-commit", specifier = ">=4.3.0" }]
 
 [[package]]
 name = "charset-normalizer"

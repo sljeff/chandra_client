@@ -16,11 +16,17 @@ class InferenceManager:
         else:
             self.model = None
 
-    def generate(self, batch: List[BatchInputItem], **kwargs) -> List[BatchOutputItem]:
+    def generate(
+        self, batch: List[BatchInputItem], max_output_tokens=None, **kwargs
+    ) -> List[BatchOutputItem]:
         if self.method == "vllm":
-            results = generate_vllm(batch, **kwargs)
+            results = generate_vllm(
+                batch, max_output_tokens=max_output_tokens, **kwargs
+            )
         else:
-            results = generate_hf(batch, self.model, **kwargs)
+            results = generate_hf(
+                batch, self.model, max_output_tokens=max_output_tokens, **kwargs
+            )
 
         output = []
         for result, input_item in zip(results, batch):
@@ -31,7 +37,7 @@ class InferenceManager:
                     chunks=parse_chunks(result.raw, input_item.image),
                     raw=result.raw,
                     page_box=[0, 0, input_item.image.width, input_item.image.height],
-                    token_count=result.token_count
+                    token_count=result.token_count,
                 )
             )
         return output
