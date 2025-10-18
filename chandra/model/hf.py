@@ -42,7 +42,7 @@ def generate_hf(
         clean_up_tokenization_spaces=False,
     )
     results = [
-        GenerationResult(raw=out, token_count=len(ids))
+        GenerationResult(raw=out, token_count=len(ids), error=False)
         for out, ids in zip(output_text, generated_ids_trimmed)
     ]
     return results

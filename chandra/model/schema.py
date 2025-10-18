@@ -3,16 +3,20 @@ from typing import List
 
 from PIL import Image
 
+
 @dataclass
 class GenerationResult:
     raw: str
     token_count: int
+    error: bool = False
+
 
 @dataclass
 class BatchInputItem:
     image: Image.Image
     prompt: str | None = None
     prompt_type: str | None = None
+
 
 @dataclass
 class BatchOutputItem:

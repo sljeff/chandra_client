@@ -71,7 +71,7 @@ Use the following labels:
 - Caption
 - Footnote
 - Equation-Block
-- List-Item
+- List-Group
 - Page-Header
 - Page-Footer
 - Image
