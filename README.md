@@ -1,33 +1,21 @@
 # Chandra
 
-Chandra is a highly accurate OCR model that converts images and PDFs into structured HTML/Markdown/JSON while preserving layout information.
+Chandra is an OCR model that converts images and PDFs into structured HTML/Markdown/JSON while preserving layout information.
 
 ## Features
 
 - Convert documents to markdown, html, or json with detailed layout information
 - Good handwriting support
 - Reconstructs forms accurately, including checkboxes
-- Math equation support (LaTeX)
-- Precise table reconstruction
+- Good support for tables, math, and complex layouts
+- Captions images and extracts data from diagrams
 - Support for 40+ languages
 - Two inference modes: local (HuggingFace) and remote (vLLM server)
 
+## Hosted API
 
-## Benchmarks
-
-| **Model** |  ArXiv   | Old Scans Math |  Tables  | Old Scans | Headers and Footers | Multi column | Long tiny text |   Base   |    Overall     |
-|:----------|:--------:|:--------------:|:--------:|:---------:|:-------------------:|:------------:|:--------------:|:--------:|:--------------:|
-| Datalab Chandra v0.1.0 |   81.4   |    **80.3**    | **89.4** | **50.0**  |        88.3         |   **81.0**   |    **91.6**    | **99.9** | **82.7 ± 0.9** |
-| Datalab Marker v1.10.0 | **83.8** |      69.7      |   74.8   |   32.3    |        86.6         |     79.4     |      85.7      |   99.6   |   76.5 ± 1.0   |
-| Mistral OCR API |   77.2   |      67.5      |   60.6   |   29.3    |        93.6         |     71.3     |      77.1      |   99.4   |   72.0 ± 1.1   |
-| Deepseek OCR |   75.2   |      67.9      |   79.1   |   32.9    |        96.1         |     66.3     |      78.5      |   97.7   |   74.2 ± 1.0   |
-| Nanonets OCR |   67.0   |      68.6      |   77.7   |   39.5    |        40.7         |     69.9     |      53.4      |   99.3   |   64.5 ± 1.1   |
-| GPT-4o (Anchored) |   53.5   |      74.5      |   70.0   |   40.7    |        93.8         |     69.3     |      60.6      |   96.8   |   69.9 ± 1.1   |
-| Gemini Flash 2 (Anchored) |   54.5   |      56.1      |   72.1   |   34.2    |        64.7         |     61.5     |      71.5      |   95.6   |   63.8 ± 1.2   |
-| Qwen 2.5 VL (No Anchor) |   63.1   |      65.7      |   67.3   |   38.6    |        73.6         |     68.3     |      49.1      |   98.3   |   65.5 ± 1.2   |
-| Qwen 3 VL |   70.2   |      75.1      |   45.6   |   37.5    |        89.1         |     62.1     |      43.0      |   94.3   |   64.6 ± 1.1   |
-| olmOCR v0.3.0 |   78.6   |      79.9      |   72.9   |   43.9    |      **95.1**       |     77.3     |      81.2      |   98.9   |   78.5 ± 1.1   |
-
+- We have a hosted API for Chandra [here](https://www.datalab.to/), which also includes other accuracy improvements and document workflows.
+- There is a free playground [here](https://www.datalab.to/playground) if you want to try it out without installing.
 
 ## Installation
 
@@ -58,9 +46,6 @@ chandra input.pdf ./output --method vllm
 
 # Process all files in a directory with local model
 chandra ./documents ./output --method hf
-
-# Process specific pages with custom settings
-chandra document.pdf ./output --page-range "1-10,15,20-25" --max-workers 8
 ```
 
 **CLI Options:**
@@ -88,23 +73,12 @@ Launch the interactive demo for single-page processing:
 chandra_app
 ```
 
-The web interface allows you to:
-- Upload PDFs or images
-- Select specific pages from PDFs
-- View OCR results with layout visualization
-- Download markdown output
-- See extracted images embedded in the output
-
-**Inference Modes:**
-- **hf**: Loads model locally using HuggingFace Transformers (requires GPU)
-- **vllm**: Connects to a running vLLM server for optimized batch inference
-
 ### vLLM Server (Optional)
 
 For production deployments or batch processing, use the vLLM server:
 
 ```bash
-python scripts/start_vllm.py
+chandra_vllm
 ```
 
 This launches a Docker container with optimized inference settings. Configure via environment variables:
@@ -128,10 +102,40 @@ VLLM_MODEL_NAME=chandra
 VLLM_GPUS=0
 ```
 
-## Output Formats
+## Benchmarks
 
-Chandra provides three output formats:
+| **Model** |  ArXiv   | Old Scans Math |  Tables  | Old Scans | Headers and Footers | Multi column | Long tiny text |   Base   |    Overall     |
+|:----------|:--------:|:--------------:|:--------:|:---------:|:-------------------:|:------------:|:--------------:|:--------:|:--------------:|
+| Datalab Chandra v0.1.0 |   81.4   |    **80.3**    | **89.4** | **50.0**  |        88.3         |   **81.0**   |    **91.6**    | **99.9** | **82.7 ± 0.9** |
+| Datalab Marker v1.10.0 | **83.8** |      69.7      |   74.8   |   32.3    |        86.6         |     79.4     |      85.7      |   99.6   |   76.5 ± 1.0   |
+| Mistral OCR API |   77.2   |      67.5      |   60.6   |   29.3    |        93.6         |     71.3     |      77.1      |   99.4   |   72.0 ± 1.1   |
+| Deepseek OCR |   75.2   |      67.9      |   79.1   |   32.9    |        96.1         |     66.3     |      78.5      |   97.7   |   74.2 ± 1.0   |
+| GPT-4o (Anchored) |   53.5   |      74.5      |   70.0   |   40.7    |        93.8         |     69.3     |      60.6      |   96.8   |   69.9 ± 1.1   |
+| Gemini Flash 2 (Anchored) |   54.5   |      56.1      |   72.1   |   34.2    |        64.7         |     61.5     |      71.5      |   95.6   |   63.8 ± 1.2   |
+| Qwen 3 VL |   70.2   |      75.1      |   45.6   |   37.5    |        89.1         |     62.1     |      43.0      |   94.3   |   64.6 ± 1.1   |
+| olmOCR v0.3.0 |   78.6   |      79.9      |   72.9   |   43.9    |      **95.1**       |     77.3     |      81.2      |   98.9   |   78.5 ± 1.1   |
 
-1. **HTML**: Structured HTML with layout blocks and bounding boxes
-2. **Markdown**: Clean, readable Markdown conversion
-3. **Layout Image**: Visual representation of detected layout blocks
+
+## Examples
+
+| Type | Name | Link |
+|------|------|------|
+| Tables | Water Damage Form | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/tables/water_damage.png) |
+| Tables | 10K Filing | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/tables/10k.png) |
+| Forms | Handwritten Form | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/forms/handwritten_form.png) |
+| Forms | Lease Agreement | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/forms/lease.png) |
+| Handwriting | Doctor Note | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/handwriting/doctor_note.png) |
+| Handwriting | Math Homework | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/handwriting/math_hw.png) |
+| Books | Geography Textbook | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/books/geo_textbook_page.png) |
+| Books | Exercise Problems | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/books/exercises.png) |
+| Math | Attention Diagram | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/math/attn_all.png) |
+| Math | Worksheet | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/math/worksheet.png) |
+| Math | EGA Page | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/math/ega.png) |
+| Newspapers | New York Times | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/newspapers/nyt.png) |
+| Newspapers | LA Times | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/newspapers/la_times.png) |
+| Other | Transcript | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/other/transcript.png) |
+| Other | Flowchart | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/other/flowchart.png) |
+
+# Commercial usage
+
+This code is GPL-3, and our model weights use a modified OpenRAIL-M license (free for research, personal use, and startups under $2M funding/revenue). To remove the GPL license requirements, or for broader commercial licensing, visit our pricing page [here](https://www.datalab.to/pricing?utm_source=gh-chandra).

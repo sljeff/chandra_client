@@ -1,4 +1,4 @@
-name: Marker Plus CI tests
+name: Chandra CI
 
 on: [push]
 

@@ -59,9 +59,14 @@ def parse_html(
         if label in ["Image", "Figure"]:
             img = div.find("img")
             img_src = get_image_name(html, div_idx)
+
+            # If no tag, add one in
             if img:
                 img["src"] = img_src
                 image_idx += 1
+            else:
+                img = BeautifulSoup(f"<img src='{img_src}'/>", "html.parser")
+                div.append(img)
         content = str(div.decode_contents())
         out_html += content
     return out_html
