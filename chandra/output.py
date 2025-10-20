@@ -1,6 +1,8 @@
+import hashlib
 import json
 import re
 from dataclasses import dataclass, asdict
+from functools import lru_cache
 
 import six
 from PIL import Image
@@ -8,18 +10,59 @@ from bs4 import BeautifulSoup, NavigableString
 from markdownify import MarkdownConverter, re_whitespace
 
 
-def parse_html(html: str, include_headers_footers: bool = False):
+@lru_cache
+def _hash_html(html: str):
+    return hashlib.md5(html.encode("utf-8")).hexdigest()
+
+
+def get_image_name(html: str, div_idx: int, image_idx: int):
+    html_hash = _hash_html(html)
+    return f"{html_hash}_{div_idx}_img{image_idx}.webp"
+
+
+def extract_images(html: str, chunks: dict, image: Image.Image):
+    image_idx = 0
+    images = {}
+    div_idx = 0
+    for idx, chunk in enumerate(chunks):
+        div_idx += 1
+        if chunk["label"] in ["Image", "Figure"]:
+            img = chunk["content"].find("img")
+            if not img:
+                continue
+            bbox = chunk["bbox"]
+            image = image.crop(bbox)
+            img_name = get_image_name(html, div_idx, image_idx)
+            images[img_name] = image
+    return images
+
+
+def parse_html(
+    html: str, include_headers_footers: bool = False, include_images: bool = True
+):
     soup = BeautifulSoup(html, "html.parser")
     top_level_divs = soup.find_all("div", recursive=False)
     out_html = ""
+    image_idx = 0
+    div_idx = 0
     for div in top_level_divs:
+        div_idx += 1
         label = div.get("data-label")
 
         # Skip headers and footers if not included
         if label and not include_headers_footers:
             if label in ["Page-Header", "Page-Footer"]:
                 continue
+        if label and not include_images:
+            if label in ["Image", "Figure"]:
+                continue
 
+        if label in ["Image", "Figure"]:
+            img = div.find("img")
+            img_src = get_image_name(html, div_idx, image_idx)
+            if img:
+                img["src"] = img_src
+                image_idx += 1
         content = str(div.decode_contents())
         out_html += content
     return out_html
@@ -125,8 +168,10 @@ class Markdownify(MarkdownConverter):
         return text
 
 
-def parse_markdown(html: str, include_headers_footers: bool = False):
-    html = parse_html(html, include_headers_footers)
+def parse_markdown(
+    html: str, include_headers_footers: bool = False, include_images: bool = True
+):
+    html = parse_html(html, include_headers_footers, include_images)
 
     md_cls = Markdownify(
         heading_style="ATX",

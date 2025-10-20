@@ -1,7 +1,7 @@
 from typing import List
 
 from qwen_vl_utils import process_vision_info
-from transformers import Qwen2_5_VLForConditionalGeneration, Qwen2_5_VLProcessor
+from transformers import Qwen3VLForConditionalGeneration, Qwen3VLProcessor
 
 from chandra.model.schema import BatchInputItem, GenerationResult
 from chandra.model.util import scale_to_fit
@@ -31,7 +31,7 @@ def generate_hf(
     inputs = inputs.to("cuda")
 
     # Inference: Generation of the output
-    generated_ids = model.generate_hf(**inputs, max_new_tokens=max_output_tokens)
+    generated_ids = model.generate(**inputs, max_new_tokens=max_output_tokens)
     generated_ids_trimmed = [
         out_ids[len(in_ids) :]
         for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
@@ -65,13 +65,13 @@ def process_batch_element(item: BatchInputItem, processor):
 
 
 def load_model():
-    model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+    model = Qwen3VLForConditionalGeneration.from_pretrained(
         settings.MODEL_CHECKPOINT,
         dtype=settings.TORCH_DTYPE,
         device_map="auto",
         attn_implementation=settings.TORCH_ATTN_IMPLEMENTATION,
     ).to(settings.TORCH_DEVICE_MODEL)
     model = model.eval()
-    processor = Qwen2_5_VLProcessor.from_pretrained(settings.MODEL_CHECKPOINT)
+    processor = Qwen3VLProcessor.from_pretrained(settings.MODEL_CHECKPOINT)
     model.processor = processor
     return model

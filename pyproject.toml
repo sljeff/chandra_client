@@ -1,9 +1,14 @@
 [project]
-name = "chandra"
+name = "chandra-ocr"
 version = "0.1.0"
-description = "Add your description here"
+description = "OCR model that converts documents to markdown, HTML, or JSON."
 readme = "README.md"
 requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Datalab", email = "hi@datalab.to"}
+]
+keywords = ["ocr", "pdf", "markdown", "layout"]
 dependencies = [
     "beautifulsoup4>=4.14.2",
     "filetype>=1.2.0",
@@ -15,12 +20,14 @@ dependencies = [
     "pypdfium2>=4.30.0",
     "python-dotenv>=1.1.1",
     "qwen-vl-utils>=0.0.14",
-    "streamlit>=1.50.0",
-    "surya-ocr>=0.17.0",
     "torch>=2.8.0",
     "torchvision>=0.23.0",
     "transformers>=4.57.1",
+    "streamlit>=1.50.0"
 ]
+
+[project.scripts]
+chandra = "chandra_cli:main"
 
 [tool.setuptools.packages.find]
 include = ["chandra*"]
@@ -28,4 +35,5 @@ include = ["chandra*"]
 [dependency-groups]
 dev = [
     "pre-commit>=4.3.0",
+    "pytest>=8.4.2",
 ]

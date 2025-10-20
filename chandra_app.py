@@ -1,6 +1,9 @@
 import pypdfium2 as pdfium
 import streamlit as st
 from PIL import Image
+import base64
+from io import BytesIO
+import re
 
 from chandra.model import InferenceManager
 from chandra.util import draw_layout
@@ -25,6 +28,26 @@ def page_counter(pdf_file):
     doc_len = len(doc)
     doc.close()
     return doc_len
+
+
+def pil_image_to_base64(pil_image: Image.Image, format: str = "PNG") -> str:
+    """Convert PIL image to base64 data URL."""
+    buffered = BytesIO()
+    pil_image.save(buffered, format=format)
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+    return f"data:image/{format.lower()};base64,{img_str}"
+
+
+def embed_images_in_markdown(markdown: str, images: dict) -> str:
+    """Replace image filenames in markdown with base64 data URLs."""
+    for img_name, pil_image in images.items():
+        # Convert PIL image to base64 data URL
+        data_url = pil_image_to_base64(pil_image, format="PNG")
+        # Replace the image reference in markdown
+        # Pattern matches: ![...](img_name) or ![...](img_name "title")
+        pattern = rf'(!\[.*?\])\({re.escape(img_name)}(?:\s+"[^"]*")?\)'
+        markdown = re.sub(pattern, rf"\1({data_url})", markdown)
+    return markdown
 
 
 def ocr_layout(
@@ -55,7 +78,7 @@ model_mode = st.sidebar.selectbox(
     "Model Mode",
     ["None", "hf", "vllm"],
     index=0,
-    help="Select how to run inference: hf loads the model in memory using huggingface transformers, vllm connects to a running vLLM server."
+    help="Select how to run inference: hf loads the model in memory using huggingface transformers, vllm connects to a running vLLM server.",
 )
 
 # Only load model if a mode is selected
@@ -99,10 +122,15 @@ if run_ocr:
             model,
         )
 
+        # Embed images as base64 data URLs in the markdown
+        markdown_with_images = embed_images_in_markdown(result.markdown, result.images)
+
         with col1:
-            html_tab, text_tab, layout_tab = st.tabs(["HTML", "HTML as text", "Layout Image"])
+            html_tab, text_tab, layout_tab = st.tabs(
+                ["HTML", "HTML as text", "Layout Image"]
+            )
             with html_tab:
-                st.markdown(result.markdown, unsafe_allow_html=True)
+                st.markdown(markdown_with_images, unsafe_allow_html=True)
                 st.download_button(
                     label="Download Markdown",
                     data=result.markdown,
@@ -114,7 +142,11 @@ if run_ocr:
 
             if layout_image:
                 with layout_tab:
-                    st.image(layout_image, caption="Detected Layout", use_container_width=True)
+                    st.image(
+                        layout_image,
+                        caption="Detected Layout",
+                        use_container_width=True,
+                    )
                     st.text_area(result.raw)
 
 with col2:

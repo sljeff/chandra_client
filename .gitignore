@@ -1,5 +1,6 @@
 local.env
 experiments
+.claude
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

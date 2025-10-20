@@ -26,3 +26,4 @@ class BatchOutputItem:
     raw: str
     page_box: List[int]
     token_count: int
+    images: dict
