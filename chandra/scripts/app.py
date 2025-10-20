@@ -64,7 +64,7 @@ def ocr_layout(
     return result, layout_image
 
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", page_title="Chandra OCR Demo")
 col1, col2 = st.columns([0.5, 0.5])
 
 st.markdown("""

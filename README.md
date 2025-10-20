@@ -5,29 +5,43 @@ Chandra is a highly accurate OCR model that converts images and PDFs into struct
 ## Features
 
 - Convert documents to markdown, html, or json with detailed layout information
+- Good handwriting support
+- Reconstructs forms accurately, including checkboxes
 - Math equation support (LaTeX)
-- Reconstructs forms, including checkboxes
 - Precise table reconstruction
 - Support for 40+ languages
 - Two inference modes: local (HuggingFace) and remote (vLLM server)
 
+
 ## Benchmarks
 
-| **Model** | ArXiv | Old Scans Math | Tables | Old Scans | Headers and Footers | Multi column | Long tiny text | Base | Overall |
-|:----------|:-----:|:--------------:|:------:|:---------:|:-------------------:|:------------:|:--------------:|:----:|:-------:|
-| Datalab Chandra v0.1.0 | 81.4 | **80.3** | **89.4** | **50.0** | 88.3 | **81.0** | **91.6** | **99.9** | **82.7 ± 0.9** |
-| Datalab Marker v1.10.0 | **83.8** | 69.7 | 74.8 | 32.3 | 86.6 | 79.4 | 85.7 | 99.6 | 76.5 ± 1.0 |
-| Mistral OCR API | 77.2 | 67.5 | 60.6 | 29.3 | 93.6 | 71.3 | 77.1 | 99.4 | 72.0 ± 1.1 |
-| Deepseek OCR | 75.2 | 67.9 | 79.1 | 32.9 | 96.1 | 66.3 | 78.5 | 97.7 | 74.2 ± 1.0 |
-| Nanonets OCR | 67.0 | 68.6 | 77.7 | 39.5 | 40.7 | 69.9 | 53.4 | 99.3 | 64.5 ± 1.1 |
-| GPT-4o (Anchored) | 53.5 | 74.5 | 70.0 | 40.7 | 93.8 | 69.3 | 60.6 | 96.8 | 69.9 ± 1.1 |
-| Gemini Flash 2 (Anchored) | 54.5 | 56.1 | 72.1 | 34.2 | 64.7 | 61.5 | 71.5 | 95.6 | 63.8 ± 1.2 |
-| Qwen 2.5 VL (No Anchor) | 63.1 | 65.7 | 67.3 | 38.6 | 73.6 | 68.3 | 49.1 | 98.3 | 65.5 ± 1.2 |
-| olmOCR v0.3.0 | 78.6 | 79.9 | 72.9 | 43.9 | **95.1** | 77.3 | 81.2 | 98.9 | 78.5 ± 1.1 |
+| **Model** |  ArXiv   | Old Scans Math |  Tables  | Old Scans | Headers and Footers | Multi column | Long tiny text |   Base   |    Overall     |
+|:----------|:--------:|:--------------:|:--------:|:---------:|:-------------------:|:------------:|:--------------:|:--------:|:--------------:|
+| Datalab Chandra v0.1.0 |   81.4   |    **80.3**    | **89.4** | **50.0**  |        88.3         |   **81.0**   |    **91.6**    | **99.9** | **82.7 ± 0.9** |
+| Datalab Marker v1.10.0 | **83.8** |      69.7      |   74.8   |   32.3    |        86.6         |     79.4     |      85.7      |   99.6   |   76.5 ± 1.0   |
+| Mistral OCR API |   77.2   |      67.5      |   60.6   |   29.3    |        93.6         |     71.3     |      77.1      |   99.4   |   72.0 ± 1.1   |
+| Deepseek OCR |   75.2   |      67.9      |   79.1   |   32.9    |        96.1         |     66.3     |      78.5      |   97.7   |   74.2 ± 1.0   |
+| Nanonets OCR |   67.0   |      68.6      |   77.7   |   39.5    |        40.7         |     69.9     |      53.4      |   99.3   |   64.5 ± 1.1   |
+| GPT-4o (Anchored) |   53.5   |      74.5      |   70.0   |   40.7    |        93.8         |     69.3     |      60.6      |   96.8   |   69.9 ± 1.1   |
+| Gemini Flash 2 (Anchored) |   54.5   |      56.1      |   72.1   |   34.2    |        64.7         |     61.5     |      71.5      |   95.6   |   63.8 ± 1.2   |
+| Qwen 2.5 VL (No Anchor) |   63.1   |      65.7      |   67.3   |   38.6    |        73.6         |     68.3     |      49.1      |   98.3   |   65.5 ± 1.2   |
+| Qwen 3 VL |   70.2   |      75.1      |   45.6   |   37.5    |        89.1         |     62.1     |      43.0      |   94.3   |   64.6 ± 1.1   |
+| olmOCR v0.3.0 |   78.6   |      79.9      |   72.9   |   43.9    |      **95.1**       |     77.3     |      81.2      |   98.9   |   78.5 ± 1.1   |
+
 
 ## Installation
 
+### From PyPI (Recommended)
+
 ```bash
+pip install chandra-ocr
+```
+
+### From Source
+
+```bash
+git clone https://github.com/yourusername/chandra.git
+cd chandra
 uv sync
 source .venv/bin/activate
 ```
@@ -39,14 +53,14 @@ source .venv/bin/activate
 Process single files or entire directories:
 
 ```bash
-# Process a single PDF with vLLM
-python chandra_cli.py input.pdf ./output --method vllm
+# Single file, with vllm server (see below for how to launch)
+chandra input.pdf ./output --method vllm
 
 # Process all files in a directory with local model
-python chandra_cli.py ./documents ./output --method hf
+chandra ./documents ./output --method hf
 
 # Process specific pages with custom settings
-python chandra_cli.py document.pdf ./output --page-range "1-10,15,20-25" --max-workers 8
+chandra document.pdf ./output --page-range "1-10,15,20-25" --max-workers 8
 ```
 
 **CLI Options:**
@@ -71,7 +85,7 @@ Each processed file creates a subdirectory with:
 Launch the interactive demo for single-page processing:
 
 ```bash
-streamlit run chandra_app.py --server.fileWatcherType none --server.headless true
+chandra_app
 ```
 
 The web interface allows you to:

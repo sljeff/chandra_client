@@ -15,13 +15,12 @@ def _hash_html(html: str):
     return hashlib.md5(html.encode("utf-8")).hexdigest()
 
 
-def get_image_name(html: str, div_idx: int, image_idx: int):
+def get_image_name(html: str, div_idx: int):
     html_hash = _hash_html(html)
-    return f"{html_hash}_{div_idx}_img{image_idx}.webp"
+    return f"{html_hash}_{div_idx}_img.webp"
 
 
 def extract_images(html: str, chunks: dict, image: Image.Image):
-    image_idx = 0
     images = {}
     div_idx = 0
     for idx, chunk in enumerate(chunks):
@@ -31,9 +30,9 @@ def extract_images(html: str, chunks: dict, image: Image.Image):
             if not img:
                 continue
             bbox = chunk["bbox"]
-            image = image.crop(bbox)
-            img_name = get_image_name(html, div_idx, image_idx)
-            images[img_name] = image
+            block_image = image.crop(bbox)
+            img_name = get_image_name(html, div_idx)
+            images[img_name] = block_image
     return images
 
 
@@ -59,7 +58,7 @@ def parse_html(
 
         if label in ["Image", "Figure"]:
             img = div.find("img")
-            img_src = get_image_name(html, div_idx, image_idx)
+            img_src = get_image_name(html, div_idx)
             if img:
                 img["src"] = img_src
                 image_idx += 1

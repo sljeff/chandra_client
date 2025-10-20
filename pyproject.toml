@@ -11,7 +11,9 @@ authors = [
 keywords = ["ocr", "pdf", "markdown", "layout"]
 dependencies = [
     "beautifulsoup4>=4.14.2",
+    "click>=8.0.0",
     "filetype>=1.2.0",
+    "flask>=3.0.0",
     "markdownify==1.1.0",
     "openai>=2.2.0",
     "pillow>=10.2.0",
@@ -26,8 +28,14 @@ dependencies = [
     "streamlit>=1.50.0"
 ]
 
+[build-system]
+requires = ["setuptools>=61"]  # or "setuptools>=61", "flit-core", etc.
+build-backend = "setuptools.build_meta"
+
 [project.scripts]
-chandra = "chandra_cli:main"
+chandra = "chandra.scripts.cli:main"
+chandra_app = "chandra.scripts.run_app:main"
+chandra_screenshot = "chandra.scripts.screenshot_app:main"
 
 [tool.setuptools.packages.find]
 include = ["chandra*"]
