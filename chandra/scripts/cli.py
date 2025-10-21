@@ -172,7 +172,7 @@ def save_merged_output(
 @click.option(
     "--batch-size",
     type=int,
-    default=1,
+    default=None,
     help="Number of pages to process in a batch.",
 )
 @click.option(
@@ -194,6 +194,16 @@ def main(
     batch_size: int,
     paginate_output: bool,
 ):
+    if method == "hf":
+        click.echo(
+            "When using '--method hf', ensure that the batch size is set correctly.  We will default to batch size of 1."
+        )
+        if batch_size is None:
+            batch_size = 1
+    elif method == "vllm":
+        if batch_size is None:
+            batch_size = 28
+
     click.echo("Chandra CLI - Starting OCR processing")
     click.echo(f"Input: {input_path}")
     click.echo(f"Output: {output_path}")
