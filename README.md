@@ -37,19 +37,15 @@ chandra_app
 
 ## Benchmarks
 
-| **Model** |  ArXiv   | Old Scans Math |  Tables  | Old Scans | Headers and Footers | Multi column | Long tiny text |   Base   |    Overall     |
-|:----------|:--------:|:--------------:|:--------:|:---------:|:-------------------:|:------------:|:--------------:|:--------:|:--------------:|
-| Datalab Chandra v0.1.0 |   81.4   |    **80.3**    | **89.4** | **50.0**  |        88.3         |   **81.0**   |    **91.6**    | **99.9** | **82.7 ± 0.9** |
-| Datalab Marker v1.10.0 | **83.8** |      69.7      |   74.8   |   32.3    |        86.6         |     79.4     |      85.7      |   99.6   |   76.5 ± 1.0   |
-| Mistral OCR API |   77.2   |      67.5      |   60.6   |   29.3    |        93.6         |     71.3     |      77.1      |   99.4   |   72.0 ± 1.1   |
-| Deepseek OCR |   75.2   |      67.9      |   79.1   |   32.9    |        96.1         |     66.3     |      78.5      |   97.7   |   74.2 ± 1.0   |
-| GPT-4o (Anchored) |   53.5   |      74.5      |   70.0   |   40.7    |        93.8         |     69.3     |      60.6      |   96.8   |   69.9 ± 1.1   |
-| Gemini Flash 2 (Anchored) |   54.5   |      56.1      |   72.1   |   34.2    |        64.7         |     61.5     |      71.5      |   95.6   |   63.8 ± 1.2   |
-| Qwen 3 VL |   70.2   |      75.1      |   45.6   |   37.5    |        89.1         |     62.1     |      43.0      |   94.3   |   64.6 ± 1.1   |
-| olmOCR v0.3.0 |   78.6   |      79.9      |   72.9   |   43.9    |      **95.1**       |     77.3     |      81.2      |   98.9   |   78.5 ± 1.1   |
+These are overall scores on the olmocr bench.
 
+<img src="assets/benchmarks/bench.png" width="600px"/>
+
+See full scores [below](#benchmark-table).
 
 ## Examples
+
+<img src="assets/examples/forms/handwritten_form.png" width="600px"/>
 
 | Type | Name | Link |
 |------|------|------|
@@ -155,6 +151,20 @@ VLLM_API_BASE=http://localhost:8000/v1
 VLLM_MODEL_NAME=chandra
 VLLM_GPUS=0
 ```
+
+## Benchmark table
+
+| **Model** |  ArXiv   | Old Scans Math |  Tables  | Old Scans | Headers and Footers | Multi column | Long tiny text | Base |    Overall     | Source |
+|:----------|:--------:|:--------------:|:--------:|:---------:|:-------------------:|:------------:|:--------------:|:----:|:--------------:|:------:|
+| Datalab Chandra v0.1.0 |   82.2   | **80.3** | **88.0** | **50.4**  |        90.8         |     81.2     |    **92.3**    | **99.9** | **83.1 ± 0.9** | Own benchmarks |
+| Datalab Marker v1.10.0 | **83.8** | 69.7 |   74.8   |   32.3    |        86.6         |     79.4     |      85.7      | 99.6 |   76.5 ± 1.0   | Own benchmarks |
+| Mistral OCR API |   77.2   | 67.5 |   60.6   |   29.3    |        93.6         |     71.3     |      77.1      | 99.4 |   72.0 ± 1.1   | olmocr repo |
+| Deepseek OCR |   75.2   | 72.3 |   79.7   |   33.3    |        96.1         |     66.7     |      80.1      | 99.7 |   75.4 ± 1.0   | Own benchmarks |
+| GPT-4o (Anchored) |   53.5   | 74.5 |   70.0   |   40.7    |        93.8         |     69.3     |      60.6      | 96.8 |   69.9 ± 1.1   | olmocr repo |
+| Gemini Flash 2 (Anchored) |   54.5   | 56.1 |   72.1   |   34.2    |        64.7         |     61.5     |      71.5      | 95.6 |   63.8 ± 1.2   | olmocr repo |
+| Qwen 3 VL |   70.2   | 75.1 |   45.6   |   37.5    |        89.1         |     62.1     |      43.0      | 94.3 |   64.6 ± 1.1   | Own benchmarks |
+| olmOCR v0.3.0 |   78.6   | 79.9 |   72.9   |   43.9    |      **95.1**       |     77.3     |      81.2      | 98.9 |   78.5 ± 1.1   | olmocr repo |
+| dots.ocr |   82.1   | 64.2 |   88.3   |   40.9    |        94.1         |   **82.4**   |      81.2      | 99.5 |   79.1 ± 1.0   | dots.ocr repo |
 
 # Commercial usage
 
