@@ -65,6 +65,10 @@ See full scores [below](#benchmark-table).
 | Other | Transcript | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/other/transcript.png) |
 | Other | Flowchart | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/other/flowchart.png) |
 
+## Community
+
+[Discord](https://discord.gg//KuZwXNGnfH) is where we discuss future development.
+
 ## Installation
 
 ### Package
