@@ -65,12 +65,15 @@ def process_batch_element(item: BatchInputItem, processor):
 
 
 def load_model():
+    device_map = "auto"
+    if settings.TORCH_DEVICE:
+        device_map = {"": settings.TORCH_DEVICE}
     model = Qwen3VLForConditionalGeneration.from_pretrained(
         settings.MODEL_CHECKPOINT,
         dtype=settings.TORCH_DTYPE,
-        device_map="auto",
+        device_map=device_map,
         attn_implementation=settings.TORCH_ATTN_IMPLEMENTATION,
-    ).to(settings.TORCH_DEVICE_MODEL)
+    )
     model = model.eval()
     processor = Qwen3VLProcessor.from_pretrained(settings.MODEL_CHECKPOINT)
     model.processor = processor
