@@ -17,8 +17,6 @@ def main():
         "-v",
         f"{os.path.expanduser('~')}/.cache/huggingface:/root/.cache/huggingface",
         "--env",
-        f"HUGGING_FACE_HUB_TOKEN={os.getenv('HF_TOKEN')}",
-        "--env",
         "VLLM_ATTENTION_BACKEND=TORCH_SDPA",
         "-p",
         "8000:8000",
