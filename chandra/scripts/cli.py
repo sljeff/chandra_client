@@ -87,7 +87,7 @@ def save_merged_output(
 
         # Save extracted images if requested
         if save_images and result.images:
-            images_dir = file_output_dir / "images"
+            images_dir = file_output_dir
             images_dir.mkdir(exist_ok=True)
 
             for img_name, pil_image in result.images.items():
