@@ -22,21 +22,6 @@ class Settings(BaseSettings):
     VLLM_GPUS: str = "0"
     MAX_VLLM_RETRIES: int = 6
 
-    # Transformers settings
-    @computed_field
-    @property
-    def TORCH_DEVICE_MODEL(self) -> str:
-        if self.TORCH_DEVICE is not None:
-            return self.TORCH_DEVICE
-
-        if torch.cuda.is_available():
-            return "cuda"
-
-        if torch.backends.mps.is_available():
-            return "mps"
-
-        return "cpu"
-
     @computed_field
     @property
     def TORCH_DTYPE(self) -> torch.dtype:

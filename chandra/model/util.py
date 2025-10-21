@@ -43,7 +43,10 @@ def scale_to_fit(
 
 
 def detect_repeat_token(
-    predicted_tokens: str, max_repeats: int = 4, window_size: int = 500, cut_from_end: int = 0
+    predicted_tokens: str,
+    max_repeats: int = 4,
+    window_size: int = 500,
+    cut_from_end: int = 0,
 ):
     try:
         predicted_tokens = parse_markdown(predicted_tokens)
@@ -77,7 +80,3 @@ def detect_repeat_token(
             return True
 
     return False
-
-
-def layout_failed(predicted_tokens: str, image: Image.Image):
-    pass

@@ -1,6 +1,6 @@
 # Chandra
 
-Chandra is an OCR model that converts images and PDFs into structured HTML/Markdown/JSON while preserving layout information.
+Chandra is a highly accurate OCR model that converts images and PDFs into structured HTML/Markdown/JSON while preserving layout information.
 
 ## Features
 
@@ -154,7 +154,11 @@ VLLM_MODEL_NAME=chandra
 VLLM_GPUS=0
 ```
 
-## Benchmark table
+# Commercial usage
+
+This code is Apache 2.0, and our model weights use a modified OpenRAIL-M license (free for research, personal use, and startups under $2M funding/revenue, cannot be used competitively with our API). To remove the OpenRAIL license requirements, or for broader commercial licensing, visit our pricing page [here](https://www.datalab.to/pricing?utm_source=gh-chandra).
+
+# Benchmark table
 
 | **Model**                 |  ArXiv   | Old Scans Math |  Tables  | Old Scans | Headers and Footers | Multi column | Long tiny text | Base |    Overall     | Source |
 |:--------------------------|:--------:|:--------------:|:--------:|:---------:|:-------------------:|:------------:|:--------------:|:----:|:--------------:|:------:|
@@ -168,9 +172,6 @@ VLLM_GPUS=0
 | olmOCR v0.3.0             |   78.6   | 79.9 |   72.9   |   43.9    |      **95.1**       |     77.3     |      81.2      | 98.9 |   78.5 ± 1.1   | olmocr repo |
 | dots.ocr                  |   82.1   | 64.2 |   88.3   |   40.9    |        94.1         |   **82.4**   |      81.2      | 99.5 |   79.1 ± 1.0   | dots.ocr repo |
 
-# Commercial usage
-
-This code is Apache 2.0, and our model weights use a modified OpenRAIL-M license (free for research, personal use, and startups under $2M funding/revenue, cannot be used competitively with our API). To remove the OpenRAIL license requirements, or for broader commercial licensing, visit our pricing page [here](https://www.datalab.to/pricing?utm_source=gh-chandra).
 
 # Credits
 
