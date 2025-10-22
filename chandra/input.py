@@ -2,12 +2,21 @@ from typing import List
 import filetype
 from PIL import Image
 import pypdfium2 as pdfium
+import pypdfium2.raw as pdfium_c
 
 from chandra.settings import settings
 
 
+def flatten(page, flag=pdfium_c.FLAT_NORMALDISPLAY):
+    rc = pdfium_c.FPDFPage_Flatten(page, flag)
+    if rc == pdfium_c.FLATTEN_FAIL:
+        print(f"Failed to flatten annotations / form fields on page {page}.")
+
+
 def load_pdf_images(filepath: str, page_range: List[int]):
     doc = pdfium.PdfDocument(filepath)
+    doc.init_forms()
+
     images = []
     for page in range(len(doc)):
         if not page_range or page in page_range:
@@ -15,7 +24,10 @@ def load_pdf_images(filepath: str, page_range: List[int]):
             min_page_dim = min(page_obj.get_width(), page_obj.get_height())
             scale_dpi = (settings.MIN_IMAGE_DIM / min_page_dim) * 72
             scale_dpi = max(scale_dpi, settings.IMAGE_DPI)
-            pil_image = doc[page].render(scale=scale_dpi / 72).to_pil().convert("RGB")
+            page_obj = doc[page]
+            flatten(page_obj)
+            page_obj = doc[page]
+            pil_image = page_obj.render(scale=scale_dpi / 72).to_pil().convert("RGB")
             images.append(pil_image)
 
     doc.close()
