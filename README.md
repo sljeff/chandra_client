@@ -1,187 +1,159 @@
-# Chandra
+# Chandra Client
 
-Chandra is a highly accurate OCR model that converts images and PDFs into structured HTML/Markdown/JSON while preserving layout information.
+Lightweight Python client for Chandra OCR with vLLM support.
 
-## Features
+Fork of [datalab-to/chandra](https://github.com/datalab-to/chandra) - optimized for client-only usage.
 
-- Convert documents to markdown, html, or json with detailed layout information
-- Good handwriting support
-- Reconstructs forms accurately, including checkboxes
-- Good support for tables, math, and complex layouts
-- Extracts images and diagrams, with captions and structured data
-- Support for 40+ languages
-- Two inference modes: local (HuggingFace) and remote (vLLM server)
-
-## Hosted API
-
-- We have a hosted API for Chandra [here](https://www.datalab.to/), which also includes other accuracy improvements and document workflows.
-- There is a free playground [here](https://www.datalab.to/playground) if you want to try it out without installing.
-
-## Quickstart
-
-The easiest way to start is with the CLI tools:
-
-```shell
-pip install chandra-ocr
-
-# With VLLM
-chandra_vllm
-chandra input.pdf ./output
-
-# With HuggingFace
-chandra input.pdf ./output --method hf
-
-# Interactive streamlit app
-chandra_app
-```
-
-## Benchmarks
-
-These are overall scores on the olmocr bench.
-
-<img src="assets/benchmarks/bench.png" width="600px"/>
-
-See full scores [below](#benchmark-table).
-
-## Examples
-
-<img src="assets/examples/forms/handwritten_form.png" width="600px"/>
-
-| Type | Name | Link |
-|------|------|------|
-| Tables | Water Damage Form | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/tables/water_damage.png) |
-| Tables | 10K Filing | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/tables/10k.png) |
-| Forms | Handwritten Form | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/forms/handwritten_form.png) |
-| Forms | Lease Agreement | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/forms/lease.png) |
-| Handwriting | Doctor Note | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/handwriting/doctor_note.png) |
-| Handwriting | Math Homework | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/handwriting/math_hw.png) |
-| Books | Geography Textbook | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/books/geo_textbook_page.png) |
-| Books | Exercise Problems | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/books/exercises.png) |
-| Math | Attention Diagram | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/math/attn_all.png) |
-| Math | Worksheet | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/math/worksheet.png) |
-| Math | EGA Page | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/math/ega.png) |
-| Newspapers | New York Times | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/newspapers/nyt.png) |
-| Newspapers | LA Times | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/newspapers/la_times.png) |
-| Other | Transcript | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/other/transcript.png) |
-| Other | Flowchart | [View](https://github.com/datalab-to/chandra/blob/master/assets/examples/other/flowchart.png) |
-
-## Community
-
-[Discord](https://discord.gg//KuZwXNGnfH) is where we discuss future development.
+**Key improvements:**
+- Minimal dependencies (~50MB vs ~4GB) - no torch/transformers
+- Simple high-level API
+- All config via constructor - no environment variables
+- Direct file processing with `parse_file(path)`
 
 ## Installation
 
-### Package
-
 ```bash
-pip install chandra-ocr
+pip install git+https://github.com/sljeff/chandra_client.git
 ```
 
-If you're going to use the huggingface method, we also recommend installing [flash attention](https://github.com/Dao-AILab/flash-attention).
+## Prerequisites
 
-### From Source
-
-```bash
-git clone https://github.com/datalab-to/chandra.git
-cd chandra
-uv sync
-source .venv/bin/activate
-```
+You must have a running Chandra vLLM server. See [original repo](https://github.com/datalab-to/chandra) for deployment instructions.
 
 ## Usage
 
-### CLI
+### Basic Usage
 
-Process single files or entire directories:
+```python
+from chandra import ChandraOCRClient
 
-```bash
-# Single file, with vllm server (see below for how to launch vllm)
-chandra input.pdf ./output --method vllm
+client = ChandraOCRClient(base_url="http://localhost:8000")
+pages = client.parse_file("document.pdf")
 
-# Process all files in a directory with local model
-chandra ./documents ./output --method hf
+for page in pages:
+    print(page["md_content"])
 ```
 
-**CLI Options:**
-- `--method [hf|vllm]`: Inference method (default: vllm)
-- `--page-range TEXT`: Page range for PDFs (e.g., "1-5,7,9-12")
-- `--max-output-tokens INTEGER`: Max tokens per page
-- `--max-workers INTEGER`: Parallel workers for vLLM
-- `--include-images/--no-images`: Extract and save images (default: include)
-- `--include-headers-footers/--no-headers-footers`: Include page headers/footers (default: exclude)
-- `--batch-size INTEGER`: Pages per batch (default: 1)
+### Advanced Usage
 
-**Output Structure:**
+```python
+from chandra import ChandraOCRClient
+from PIL import Image
 
-Each processed file creates a subdirectory with:
-- `<filename>.md` - Markdown output
-- `<filename>.html` - HTML output
-- `<filename>_metadata.json` - Metadata (page info, token count, etc.)
-- `images/` - Extracted images from the document
+# Custom configuration
+client = ChandraOCRClient(
+    base_url="http://localhost:8000",
+    temperature=0.3,
+    max_tokens=16384,
+    num_threads=32,
+)
 
-### Streamlit Web App
+# Parse PDF with page range
+pages = client.parse_file("document.pdf", page_range="0-9")
 
-Launch the interactive demo for single-page processing:
+# Parse single image
+image = Image.open("page.png")
+result = client.parse_image(image)
 
-```bash
-chandra_app
+# Custom prompt
+result = client.parse_file("doc.pdf", prompt="Extract all text as JSON")
 ```
 
-### vLLM Server (Optional)
+## API Reference
 
-For production deployments or batch processing, use the vLLM server:
+### ChandraOCRClient
 
-```bash
-chandra_vllm
+```python
+ChandraOCRClient(
+    base_url: str = "http://localhost:8000",
+    api_key: str = "",
+    model_name: str = "chandra",
+    temperature: float = 0.0,
+    top_p: float = 0.1,
+    max_tokens: int = 8192,
+    num_threads: int = 8,
+    max_retries: int = 6,
+    include_headers_footers: bool = False,
+    image_dpi: int = 200,
+    min_image_dim: int = 1024,
+)
 ```
 
-This launches a Docker container with optimized inference settings. Configure via environment variables:
+### Methods
 
-- `VLLM_API_BASE`: Server URL (default: `http://localhost:8000/v1`)
-- `VLLM_MODEL_NAME`: Model name for the server (default: `chandra`)
-- `VLLM_GPUS`: GPU device IDs (default: `0`)
+- `parse_file(path, prompt_mode="layout", prompt=None, page_range=None)` → List[dict]
+- `parse_images(images, prompt_mode="layout", prompt=None)` → List[dict]
+- `parse_image(image, prompt_mode="layout", prompt=None)` → dict
 
-You can also start your own vllm server with the `datalab-to/chandra` model.
+**Parameters:**
+- `path` - File path (PDF or image)
+- `images` - List of PIL Image objects
+- `image` - Single PIL Image object
+- `prompt_mode` - `"layout"` (default) or `"plain"`, or custom prompt type
+- `prompt` - Custom prompt string (overrides prompt_mode)
+- `page_range` - Page range for PDFs (e.g., `"0-9"` or `"1,3,5-10"`)
 
-### Configuration
+## Return Structure
 
-Settings can be configured via environment variables or a `local.env` file:
+Each page returns a dictionary:
 
-```bash
-# Model settings
-MODEL_CHECKPOINT=datalab-to/chandra
-MAX_OUTPUT_TOKENS=8192
-
-# vLLM settings
-VLLM_API_BASE=http://localhost:8000/v1
-VLLM_MODEL_NAME=chandra
-VLLM_GPUS=0
+```python
+{
+    "page_no": 0,
+    "input_width": 1632,
+    "input_height": 2112,
+    "cells": [
+        {
+            "bbox": [286, 202, 1332, 612],
+            "category": "Figure",
+            "text": ""
+        },
+        {
+            "bbox": [286, 624, 1333, 686],
+            "category": "Caption",
+            "text": "Figure 4: SEED calculation process..."
+        },
+        {
+            "bbox": [286, 748, 1333, 924],
+            "category": "Text",
+            "text": "LaTeX preprocessing: we strip wrappers..."
+        },
+        {
+            "bbox": [100, 850, 900, 1200],
+            "category": "Table",
+            "text": "<table>...</table>"
+        }
+    ],
+    "md_content": "# Title\n\nContent..."
+}
 ```
 
-# Commercial usage
+**Common categories:** `Text`, `Caption`, `Footnote`, `Equation-Block`, `List-Group`, `Page-Header`, `Page-Footer`, `Image`, `Section-Header`, `Table`, `Complex-Block`, `Code-Block`, `Form`, `Table-Of-Contents`, `Figure`
 
-This code is Apache 2.0, and our model weights use a modified OpenRAIL-M license (free for research, personal use, and startups under $2M funding/revenue, cannot be used competitively with our API). To remove the OpenRAIL license requirements, or for broader commercial licensing, visit our pricing page [here](https://www.datalab.to/pricing?utm_source=gh-chandra).
+## Why This Fork
 
-# Benchmark table
+Original chandra-ocr includes local inference with heavy dependencies (torch, transformers, etc.). This fork:
+- Removes local inference support
+- Removes CLI tools and apps
+- Only supports vLLM backend
+- Reduces dependencies from ~4GB to ~50MB
+- Provides simpler, high-level API
 
-| **Model**                 |  ArXiv   | Old Scans Math |  Tables  | Old Scans | Headers and Footers | Multi column | Long tiny text | Base |    Overall     | Source |
-|:--------------------------|:--------:|:--------------:|:--------:|:---------:|:-------------------:|:------------:|:--------------:|:----:|:--------------:|:------:|
-| Datalab Chandra v0.1.0    |   82.2   | **80.3** | **88.0** | **50.4**  |        90.8         |     81.2     |    **92.3**    | **99.9** | **83.1 ± 0.9** | Own benchmarks |
-| Datalab Marker v1.10.0    | **83.8** | 69.7 |   74.8   |   32.3    |        86.6         |     79.4     |      85.7      | 99.6 |   76.5 ± 1.0   | Own benchmarks |
-| Mistral OCR API           |   77.2   | 67.5 |   60.6   |   29.3    |        93.6         |     71.3     |      77.1      | 99.4 |   72.0 ± 1.1   | olmocr repo |
-| Deepseek OCR              |   75.2   | 72.3 |   79.7   |   33.3    |        96.1         |     66.7     |      80.1      | 99.7 |   75.4 ± 1.0   | Own benchmarks |
-| GPT-4o (Anchored)         |   53.5   | 74.5 |   70.0   |   40.7    |        93.8         |     69.3     |      60.6      | 96.8 |   69.9 ± 1.1   | olmocr repo |
-| Gemini Flash 2 (Anchored) |   54.5   | 56.1 |   72.1   |   34.2    |        64.7         |     61.5     |      71.5      | 95.6 |   63.8 ± 1.2   | olmocr repo |
-| Qwen 3 VL 8B              |   70.2   | 75.1 |   45.6   |   37.5    |        89.1         |     62.1     |      43.0      | 94.3 |   64.6 ± 1.1   | Own benchmarks |
-| olmOCR v0.3.0             |   78.6   | 79.9 |   72.9   |   43.9    |      **95.1**       |     77.3     |      81.2      | 98.9 |   78.5 ± 1.1   | olmocr repo |
-| dots.ocr                  |   82.1   | 64.2 |   88.3   |   40.9    |        94.1         |   **82.4**   |      81.2      | 99.5 |   79.1 ± 1.0   | dots.ocr repo |
+Perfect for production deployments where you have a dedicated vLLM server.
 
+## Original Project
 
-# Credits
+For the full-featured version with local inference:
+- Repository: https://github.com/datalab-to/chandra
+- Hosted API: https://www.datalab.to/
+- Playground: https://www.datalab.to/playground
 
-Thank you to the following open source projects:
+## License
 
-- [Huggingface Transformers](https://github.com/huggingface/transformers)
-- [VLLM](https://github.com/vllm-project/vllm)
-- [olmocr](github.com/allenai/olmocr)
-- [Qwen 3 VL](https://github.com/QwenLM/Qwen3)
+Apache 2.0 (same as original)
+
+Model weights: See [MODEL_LICENSE](MODEL_LICENSE)
+
+## Credits
+
+Fork of [datalab-to/chandra](https://github.com/datalab-to/chandra) by Datalab.

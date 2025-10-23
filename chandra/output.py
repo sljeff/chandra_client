@@ -37,7 +37,7 @@ def extract_images(html: str, chunks: dict, image: Image.Image):
 
 
 def parse_html(
-    html: str, include_headers_footers: bool = False, include_images: bool = True
+    html: str, include_headers_footers: bool = False
 ):
     soup = BeautifulSoup(html, "html.parser")
     top_level_divs = soup.find_all("div", recursive=False)
@@ -52,21 +52,12 @@ def parse_html(
         if label and not include_headers_footers:
             if label in ["Page-Header", "Page-Footer"]:
                 continue
-        if label and not include_images:
-            if label in ["Image", "Figure"]:
-                continue
 
         if label in ["Image", "Figure"]:
-            img = div.find("img")
-            img_src = get_image_name(html, div_idx)
-
-            # If no tag, add one in
-            if img:
-                img["src"] = img_src
-                image_idx += 1
-            else:
-                img = BeautifulSoup(f"<img src='{img_src}'/>", "html.parser")
-                div.append(img)
+            # Replace image content with text placeholder
+            div.clear()
+            placeholder = f"[{label}]"
+            div.append(placeholder)
         content = str(div.decode_contents())
         out_html += content
     return out_html
@@ -173,9 +164,9 @@ class Markdownify(MarkdownConverter):
 
 
 def parse_markdown(
-    html: str, include_headers_footers: bool = False, include_images: bool = True
+    html: str, include_headers_footers: bool = False
 ):
-    html = parse_html(html, include_headers_footers, include_images)
+    html = parse_html(html, include_headers_footers)
 
     md_cls = Markdownify(
         heading_style="ATX",
@@ -236,3 +227,80 @@ def parse_chunks(html: str, image: Image.Image):
     layout = parse_layout(html, image)
     chunks = [asdict(block) for block in layout]
     return chunks
+
+
+# ========== dots-ocr-client compatibility functions ==========
+
+
+def html_to_plain_text(html: str) -> str:
+    """
+    Extract plain text from HTML content.
+    Preserves line breaks and extracts LaTeX from math tags.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Convert br tags to newlines
+    for br in soup.find_all("br"):
+        br.replace_with("\n")
+
+    # Replace math tags with their text content (LaTeX)
+    for math_tag in soup.find_all("math"):
+        latex = math_tag.get_text().strip()
+        math_tag.replace_with(latex)
+
+    # Get text and normalize whitespace
+    text = soup.get_text(separator=" ", strip=True)
+    text = re_whitespace.sub(" ", text)
+    # Restore intentional line breaks
+    text = re.sub(r" ?\n ?", "\n", text)
+    return text.strip()
+
+
+def html_to_table_html(html: str) -> str:
+    """
+    Extract table HTML from content.
+    Returns the raw HTML table(s), or plain text if no table found.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    tables = soup.find_all("table")
+    if not tables:
+        return html_to_plain_text(html)
+    return "\n\n".join(str(table) for table in tables)
+
+
+def html_to_latex(html: str) -> str:
+    """
+    Extract LaTeX content from math tags.
+    Falls back to plain text if no math tags found.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    maths = soup.find_all("math")
+    if not maths:
+        return html_to_plain_text(html)
+
+    parts = []
+    for math_tag in maths:
+        latex = math_tag.get_text().strip()
+        if latex:
+            parts.append(latex)
+    return "\n".join(parts)
+
+
+def extract_text_from_cell(label: str, html: str) -> str:
+    """
+    Extract appropriate text representation based on cell label.
+
+    - Text/Title/Section-header: plain text
+    - Table: HTML table
+    - Formula: LaTeX
+    - Image/Figure/Picture: empty string
+    """
+    if label == "Table":
+        return html_to_table_html(html)
+    elif label in {"Formula", "Equation", "Math"}:
+        return html_to_latex(html)
+    elif label in {"Image", "Figure", "Picture"}:
+        return ""
+    else:
+        # Default: extract plain text
+        return html_to_plain_text(html)

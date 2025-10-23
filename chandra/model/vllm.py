@@ -22,15 +22,24 @@ def image_to_base64(image: Image.Image) -> str:
 
 def generate_vllm(
     batch: List[BatchInputItem],
-    max_output_tokens: int = None,
-    max_retries: int = None,
+    client: OpenAI | None = None,
+    model_name: str | None = None,
+    max_output_tokens: int | None = None,
+    max_retries: int | None = None,
     max_workers: int | None = None,
+    temperature: float = 0.0,
+    top_p: float = 0.1,
+    retry_temperature: float = 0.3,
+    retry_top_p: float = 0.95,
 ) -> List[GenerationResult]:
-    client = OpenAI(
-        api_key=settings.VLLM_API_KEY,
-        base_url=settings.VLLM_API_BASE,
-    )
-    model_name = settings.VLLM_MODEL_NAME
+    if client is None:
+        client = OpenAI(
+            api_key=settings.VLLM_API_KEY,
+            base_url=settings.VLLM_API_BASE,
+        )
+    
+    if model_name is None:
+        model_name = settings.VLLM_MODEL_NAME
 
     if max_retries is None:
         max_retries = settings.MAX_VLLM_RETRIES
@@ -46,7 +55,7 @@ def generate_vllm(
         model_name = models.data[0].id
 
     def _generate(
-        item: BatchInputItem, temperature: float = 0, top_p: float = 0.1
+        item: BatchInputItem, temp: float = 0, top_p_val: float = 0.1
     ) -> GenerationResult:
         prompt = item.prompt
         if not prompt:
@@ -68,9 +77,9 @@ def generate_vllm(
             completion = client.chat.completions.create(
                 model=model_name,
                 messages=[{"role": "user", "content": content}],
-                max_tokens=settings.MAX_OUTPUT_TOKENS,
-                temperature=temperature,
-                top_p=top_p,
+                max_tokens=max_output_tokens,
+                temperature=temp,
+                top_p=top_p_val,
             )
         except Exception as e:
             print(f"Error during VLLM generation: {e}")
@@ -82,11 +91,11 @@ def generate_vllm(
             error=False,
         )
 
-    def process_item(item, max_retries):
-        result = _generate(item)
+    def process_item(item, max_retries_val):
+        result = _generate(item, temp=temperature, top_p_val=top_p)
         retries = 0
 
-        while retries < max_retries and (
+        while retries < max_retries_val and (
             detect_repeat_token(result.raw)
             or (
                 len(result.raw) > 50
@@ -97,7 +106,7 @@ def generate_vllm(
             print(
                 f"Detected repeat token or error, retrying generation (attempt {retries + 1})..."
             )
-            result = _generate(item, temperature=0.3, top_p=0.95)
+            result = _generate(item, temp=retry_temperature, top_p_val=retry_top_p)
             retries += 1
 
         return result
